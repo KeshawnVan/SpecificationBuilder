@@ -16,20 +16,20 @@ public class UserCondition {
 
     private Long id;
 
-    @Like
+    @Like   //模糊查询使用@Like
     private String name;
 
     private Integer age;
 
-    @Name("school")
+    @Name("school")     //condition中字段名与domain中的字段不一致需使用@Name显式指明对应的domain中的字段
     private List<String> schools;
 
     @Name("birthday")
-    @GreaterThanEqual
+    @GreaterThanEqual   //大于等于使用@GreaterThanEqual标明，大于使用@GreaterThan
     private LocalDateTime birthdayStart;
 
     @Name("birthday")
-    @LessThanEqual
+    @LessThanEqual      //小于等于使用@LessThanEqual标明，小于使用@LessThan
     private LocalDateTime birthdayEnd;
 
     public Long getId() {
