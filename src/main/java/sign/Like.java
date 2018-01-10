@@ -12,4 +12,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Like {
+    String LEFT = "left";
+    String RIGHT = "right";
+    String AROUND = "around";
+
+    String location() default AROUND;
 }

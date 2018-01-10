@@ -44,7 +44,7 @@ public final class SpecificationBuilder {
     private static <T> void fieldParse(Root root, List<Predicate> predicates, CriteriaBuilder cb, T condition, Field[] declaredFields) {
         for (Field field : declaredFields) {
             try {
-                if (field.isAnnotationPresent(Page.class)) {
+                if (field.isAnnotationPresent(Page.class) || field.isAnnotationPresent(Ignore.class)) {
                     continue;
                 }
                 field.setAccessible(true);
@@ -55,7 +55,7 @@ public final class SpecificationBuilder {
                     appendPredicate(root, predicates, field, fieldName, fieldObject, cb);
                 }
             } catch (IllegalAccessException e) {
-                LOGGER.error("demo.SpecificationBuilder buildSpecification fieldParse error", e);
+                LOGGER.error("SpecificationBuilder buildSpecification fieldParse error", e);
             }
         }
     }
@@ -69,7 +69,7 @@ public final class SpecificationBuilder {
             }
         } else {
             if (field.isAnnotationPresent(Like.class)) {
-                predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject + PERCENT));
+                likeHandler(root, predicates, field, fieldName, fieldObject, cb);
             } else if (field.isAnnotationPresent(GreaterThan.class)) {
                 predicates.add(cb.greaterThan(root.get(fieldName), (Comparable) fieldObject));
             } else if (field.isAnnotationPresent(GreaterThanEqual.class)) {
@@ -78,11 +78,23 @@ public final class SpecificationBuilder {
                 predicates.add(cb.lessThan(root.get(fieldName), (Comparable) fieldObject));
             } else if (field.isAnnotationPresent(LessThanEqual.class)) {
                 predicates.add(cb.lessThanOrEqualTo(root.get(fieldName), (Comparable) fieldObject));
-            } else if (field.isAnnotationPresent(Ignore.class)) {
-                return;
             } else {
                 predicates.add(cb.equal(root.get(fieldName), fieldObject));
             }
+        }
+    }
+
+    private static void likeHandler(Root root, List<Predicate> predicates, Field field, String fieldName, Object fieldObject, CriteriaBuilder cb) {
+        Like like = field.getAnnotation(Like.class);
+        String location = like.location();
+        if (Like.AROUND.equals(location)){
+            predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject + PERCENT));
+        }
+        if (Like.LEFT.equals(location)){
+            predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject));
+        }
+        if (Like.RIGHT.equals(location)){
+            predicates.add(cb.like(root.get(fieldName), fieldObject + PERCENT));
         }
     }
 }
