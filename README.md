@@ -7,7 +7,9 @@
 * Integer age
 * String school
 * LocalDateTime birthday
+
 如果我们要做一个支持按照标识（精确），年龄（精确），学校（批量），生日（区间），和名字（模糊）进行匹配的动态查询，需要构建一个包含如下字段的condition
+
 * Long id
 * String name
 * Integer age
@@ -46,7 +48,7 @@ Specification specification = new Specification<User>() {
         };
 ```      
         
-仅仅五个字段的动态SQL，就写25行代码，大多数都是样板代码,实际使用中一个condition往往大于十个字段
+仅仅五个字段的动态SQL，就写26行代码，大多数都是样板代码,实际使用中一个condition往往大于十个字段
 
 ## 使用SpecificationBuilder
 使用SpecificationBuilder去构建该查询的Specification仅需一行
@@ -70,8 +72,7 @@ Specification buildSpecification = SpecificationBuilder.buildSpecification(condi
   @Name("birthday")
   @LessThanEqual  
   private LocalDateTime birthdayEnd;
-  ```
-  
+```
 
 ## 使用指南
 使用注解加在condition的字段上对查询进行必要的说明
