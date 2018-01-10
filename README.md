@@ -60,15 +60,20 @@ Specification buildSpecification = SpecificationBuilder.buildSpecification(condi
 当然你需要在Condition对象中添加注解进行一些必要的描述，condition代码如下
 
 ```
+  //单数字段做equal操作
   private Long id;
+  //使用@Like注解标明进行模糊匹配
   @Like  
   private String name;
   private Integer age;
+  //condition中字段名与domain中的字段不一致时使用@Name修正，集合做in操作
   @Name("school") 
   private List<String> schools;
+  //@GreaterThanEqual等同于大于等于
   @Name("birthday")
   @GreaterThanEqual 
   private LocalDateTime birthdayStart;
+  //@LessThanEqual等同于小于等于
   @Name("birthday")
   @LessThanEqual  
   private LocalDateTime birthdayEnd;
