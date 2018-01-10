@@ -82,7 +82,7 @@ Specification buildSpecification = SpecificationBuilder.buildSpecification(condi
 ## 使用指南
 使用注解加在condition的字段上对查询进行必要的说明
 * 其中集合类型默认做in操作，单数默认做equal操作
-* @Like标明模糊查询
+* @Like标明模糊查询，默认在变量左右添加百分号，支持传入参数Like.LEFT,Like.RIGHT进行定制查询
 * @GreaterThanEqual标明大于等于，大于使用@GreaterThan
 * @LessThanEqual标明小于等于，小于使用@LessThan
 * @Page标明分页相关的字段，不参与构建Specification
