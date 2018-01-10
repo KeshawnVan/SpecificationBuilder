@@ -1,63 +1,89 @@
 # SpecificationBuilder
-        //1.假设接收到一个Condition
-        UserCondition userCondition = new UserCondition();
-        //2.之前构造Specification是这样的
-        Specification specification = new Specification<User>() {
-            @Nullable
-            @Override
-            public Predicate toPredicate(Root root, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                List<Predicate> predicates = new ArrayList<>();
-                if (userCondition.getId() != null) {
-                    predicates.add(criteriaBuilder.equal(root.get("id"), userCondition.getId()));
-                }
-                if (userCondition.getAge() != null) {
-                    predicates.add(criteriaBuilder.equal(root.get("age"), userCondition.getAge()));
-                }
-                if (userCondition.getName() != null) {
-                    predicates.add(criteriaBuilder.like(root.get("name"), "%" + userCondition.getName() + "%"));
-                }
-                if (userCondition.getBirthdayStart() != null) {
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("birthday"), userCondition.getBirthdayStart()));
-                }
-                if (userCondition.getBirthdayEnd() != null) {
-                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("birthday"), userCondition.getBirthdayEnd()));
-                }
-                if (CollectionUtils.isNotEmpty(userCondition.getSchools())) {
-                    predicates.add(root.get("school").in(userCondition.getSchools()));
-                }
-                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+
+## 现有问题
+假设有一个domain，里面有如下几个字段:
+* Long id
+* String name
+* Integer age
+* String school
+* LocalDateTime birthday
+
+如果我们要做一个支持按照标识（精确），年龄（精确），学校（批量），生日（区间），和名字（模糊）进行匹配的动态查询，需要构建一个包含如下字段的condition
+
+* Long id
+* String name
+* Integer age
+* List<String> schools
+* LocalDateTime birthdayStart
+* LocalDateTime birthdayEnd  
+        
+之后我们需要编写一段冗长的代码去构建Specification对象
+
+```
+Specification specification = new Specification<User>() {
+        @Nullable
+        @Override
+        public Predicate toPredicate(Root root, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder) {
+            List<Predicate> predicates = new ArrayList<>();
+            if (userCondition.getId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("id"), userCondition.getId()));
             }
+            if (userCondition.getAge() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("age"), userCondition.getAge()));
+            }
+            if (userCondition.getName() != null) {
+                predicates.add(criteriaBuilder.like(root.get("name"), "%" + userCondition.getName() + "%"));
+            }
+            if (userCondition.getBirthdayStart() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("birthday"), userCondition.getBirthdayStart()));
+            }
+            if (userCondition.getBirthdayEnd() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("birthday"), userCondition.getBirthdayEnd()));
+            }
+            if (CollectionUtils.isNotEmpty(userCondition.getSchools())) {
+                predicates.add(root.get("school").in(userCondition.getSchools()));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+        }
         };
-
-        //仅仅五个字段的动态SQL，就写25行代码，大多数都是样板代码,实际使用中一个condition往往大于十个字段
-        //3.而使用SpecificationBuilder,仅需一行
-        Specification buildSpecification = SpecificationBuilder.buildSpecification(userCondition);
-        使用时在Condition的字段上加注解进行必要的说明即可，如UserCondition
+```      
         
-       private Long id;
+仅仅五个字段的动态SQL，就写26行代码，大多数都是样板代码,实际使用中一个condition往往大于十个字段
 
-       @Like   
-       private String name;
+## 使用SpecificationBuilder
+使用SpecificationBuilder去构建该查询的Specification仅需一行
 
-       private Integer age;
+```
+Specification buildSpecification = SpecificationBuilder.buildSpecification(condition);
+```
 
-       @Name("school") 
-       private List<String> schools;
+当然你需要在Condition对象中添加注解进行一些必要的描述，condition代码如下
 
-       @Name("birthday")
-       @GreaterThanEqual 
-       private LocalDateTime birthdayStart;
+```
+  //单数字段做equal操作
+  private Long id;
+  //使用@Like注解标明进行模糊匹配
+  @Like  
+  private String name;
+  private Integer age;
+  //condition中字段名与domain中的字段不一致时使用@Name修正，集合做in操作
+  @Name("school") 
+  private List<String> schools;
+  //@GreaterThanEqual等同于大于等于
+  @Name("birthday")
+  @GreaterThanEqual 
+  private LocalDateTime birthdayStart;
+  //@LessThanEqual等同于小于等于
+  @Name("birthday")
+  @LessThanEqual  
+  private LocalDateTime birthdayEnd;
+```
 
-       @Name("birthday")
-       @LessThanEqual  
-       private LocalDateTime birthdayEnd;
-    
-    * condition中字段名与domain中的字段不一致需使用@Name显式指明对应的domain中的字段
-    * 其中集合类型默认做in操作，单数默认做equal操作
-    * @Like模糊查询
-    * 大于等于使用@GreaterThanEqual标明，大于使用@GreaterThan
-    * 小于等于使用@LessThanEqual标明，小于使用@LessThan
-    * 分页相关的字段使用@Page，不参与构建Specification
-    * 使用@Ignore可忽略字段
-
-        
+## 使用指南
+使用注解加在condition的字段上对查询进行必要的说明
+* 其中集合类型默认做in操作，单数默认做equal操作
+* @Like标明模糊查询
+* @GreaterThanEqual标明大于等于，大于使用@GreaterThan
+* @LessThanEqual标明小于等于，小于使用@LessThan
+* @Page标明分页相关的字段，不参与构建Specification
+* @Ignore标明为可忽略字段
