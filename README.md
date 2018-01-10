@@ -16,7 +16,9 @@
 * LocalDateTime birthdayEnd  
         
 之后我们需要编写一段冗长的代码去构建Specification对象
-    ```Specification specification = new Specification<User>() {
+
+```
+Specification specification = new Specification<User>() {
         @Nullable
         @Override
         public Predicate toPredicate(Root root, CriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder) {
@@ -41,14 +43,22 @@
             }
             return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
         }
-        };```      
+        };
+```      
+        
 仅仅五个字段的动态SQL，就写25行代码，大多数都是样板代码,实际使用中一个condition往往大于十个字段
 
 ## 使用SpecificationBuilder
 使用SpecificationBuilder去构建该查询的Specification仅需一行
-```Specification buildSpecification = SpecificationBuilder.buildSpecification(condition);```
+
+```
+Specification buildSpecification = SpecificationBuilder.buildSpecification(condition);
+```
+
 当然你需要在Condition对象中添加注解进行一些必要的描述，condition代码如下
-```private Long id;
+
+```
+  private Long id;
   @Like  
   private String name;
   private Integer age;
@@ -59,7 +69,9 @@
   private LocalDateTime birthdayStart;
   @Name("birthday")
   @LessThanEqual  
-  private LocalDateTime birthdayEnd;```
+  private LocalDateTime birthdayEnd;
+  ```
+  
 
 ## 使用指南
 使用注解加在condition的字段上对查询进行必要的说明
