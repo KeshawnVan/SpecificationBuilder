@@ -30,9 +30,9 @@ public final class SpecificationBuilder {
     private SpecificationBuilder() {
     }
 
-    public static <T> Specification buildSpecification(T condition) {
+    public static <T> Specification buildSpecification(final T condition) {
         Class<?> conditionClass = condition.getClass();
-        List<Field> declaredFields = ReflectionUtil.getFields(conditionClass);
+        final List<Field> declaredFields = ReflectionUtil.getFields(conditionClass);
         return new Specification<T>() {
             @Override
             public Predicate toPredicate(Root<T> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
