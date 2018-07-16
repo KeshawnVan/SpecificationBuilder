@@ -7,13 +7,13 @@ import org.springframework.data.jpa.domain.Specification;
 import sign.*;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author keshawn
@@ -33,29 +33,40 @@ public final class SpecificationBuilder {
     public static <T> Specification buildSpecification(T condition) {
         Class<?> conditionClass = condition.getClass();
         List<Field> declaredFields = ReflectionUtil.getFields(conditionClass);
-        return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>(declaredFields.size());
-            Nullable.of(declaredFields).ifPresent(fields -> fields.stream().filter(checkFiledAccess()).forEach(fieldParse(root, predicates, cb, condition)));
-            return cb.and(predicates.toArray(new Predicate[predicates.size()]));
-        };
-    }
+        return new Specification<T>() {
+            @Override
+            public Predicate toPredicate(Root<T> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                List<Predicate> predicates = new ArrayList<>(declaredFields.size());
+                if (CollectionUtils.isNotEmpty(declaredFields)) {
+                    for (Field field : declaredFields) {
+                        if (checkFiledAccess(field)) {
+                            parseField(root, criteriaBuilder, predicates, field);
+                        }
+                    }
+                }
+                return criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            }
 
-    private static java.util.function.Predicate<Field> checkFiledAccess() {
-        return field -> !(field.isAnnotationPresent(Page.class) || field.isAnnotationPresent(Ignore.class) || SERIAL_VERSION_UID.equals(field.getName()));
-    }
-
-    private static <T> Consumer<Field> fieldParse(Root root, List<Predicate> predicates, CriteriaBuilder cb, T condition) {
-        return field -> {
-            try {
-                field.setAccessible(true);
-                //优先从Name注解上取自定义名称
-                String fieldName = field.isAnnotationPresent(Name.class) ? field.getAnnotation(Name.class).value() : field.getName();
-                Nullable.of(field.get(condition)).ifPresent(fieldObject -> appendPredicate(root, predicates, field, fieldName, fieldObject, cb));
-            } catch (IllegalAccessException e) {
-                LOGGER.error("SpecificationBuilder buildSpecification fieldParse error", e);
+            private void parseField(Root<T> root, CriteriaBuilder criteriaBuilder, List<Predicate> predicates, Field field) {
+                try {
+                    field.setAccessible(true);
+                    //优先从Name注解上取自定义名称
+                    String fieldName = field.isAnnotationPresent(Name.class) ? field.getAnnotation(Name.class).value() : field.getName();
+                    Object fieldObject = field.get(condition);
+                    if (fieldObject != null) {
+                        appendPredicate(root, predicates, field, fieldName, fieldObject, criteriaBuilder);
+                    }
+                } catch (IllegalAccessException e) {
+                    LOGGER.error("SpecificationBuilder buildSpecification fieldParse error", e);
+                }
             }
         };
     }
+
+    private static Boolean checkFiledAccess(Field field) {
+        return !(field.isAnnotationPresent(Page.class) || field.isAnnotationPresent(Ignore.class) || SERIAL_VERSION_UID.equals(field.getName()));
+    }
+
 
     private static void appendPredicate(Root root, List<Predicate> predicates, Field field, String fieldName, Object fieldObject, CriteriaBuilder cb) {
         //字段如果为集合类型，做In操作

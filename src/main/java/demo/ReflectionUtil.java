@@ -11,8 +11,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -71,17 +69,18 @@ public final class ReflectionUtil {
 
     public static List<Field> getFields(Class clazz) {
         List<Field> result = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
-        Optional.ofNullable(clazz.getSuperclass()).ifPresent(addSuperclassFields(result));
+        Class superclass = clazz.getSuperclass();
+        if (superclass != null) {
+            addSuperclassFields(result, superclass);
+        }
         return result;
     }
 
-    private static Consumer<Class> addSuperclassFields(List<Field> result) {
-        return superClass -> {
-            List<Field> superclassFields = getFields(superClass);
-            List<String> resultNames = result.stream().map(Field::getName).collect(Collectors.toList());
-            List<Field> validSuperclassFields = superclassFields.stream().filter(superclassField -> !resultNames.contains(superclassField.getName())).collect(Collectors.toList());
-            result.addAll(validSuperclassFields);
-        };
+    private static void addSuperclassFields(List<Field> result, Class superclass) {
+        List<Field> superclassFields = getFields(superclass);
+        List<String> resultNames = result.stream().map(Field::getName).collect(Collectors.toList());
+        List<Field> validSuperclassFields = superclassFields.stream().filter(superclassField -> !resultNames.contains(superclassField.getName())).collect(Collectors.toList());
+        result.addAll(validSuperclassFields);
     }
 
     public static Type[] getActualTypeArguments(Type type) {
