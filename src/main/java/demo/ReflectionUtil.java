@@ -1,5 +1,6 @@
 package demo;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
@@ -11,7 +12,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author keshawn
@@ -78,9 +78,17 @@ public final class ReflectionUtil {
 
     private static void addSuperclassFields(List<Field> result, Class superclass) {
         List<Field> superclassFields = getFields(superclass);
-        List<String> resultNames = result.stream().map(Field::getName).collect(Collectors.toList());
-        List<Field> validSuperclassFields = superclassFields.stream().filter(superclassField -> !resultNames.contains(superclassField.getName())).collect(Collectors.toList());
-        result.addAll(validSuperclassFields);
+        if (CollectionUtils.isNotEmpty(superclassFields)) {
+            List<String> resultNames = new ArrayList<>(superclassFields.size());
+            for (Field field : result) {
+                resultNames.add(field.getName());
+            }
+            for (Field superclassField : superclassFields) {
+                if (!resultNames.contains(superclassField.getName())) {
+                    result.add(superclassField);
+                }
+            }
+        }
     }
 
     public static Type[] getActualTypeArguments(Type type) {
