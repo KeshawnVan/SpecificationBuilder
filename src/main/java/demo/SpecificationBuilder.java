@@ -102,16 +102,23 @@ public final class SpecificationBuilder {
     }
 
     private static void likeHandler(Root root, List<Predicate> predicates, Field field, String fieldName, Object fieldObject, CriteriaBuilder cb) {
+        if (field.isAnnotationPresent(Join.class)) {
+            Join join = field.getAnnotation(Join.class);
+            predicates.add(cb.like(root.get(join.value()).get(fieldName), buildLikeParameter(field, fieldObject)));
+        } else {
+            predicates.add(cb.like(root.get(fieldName), buildLikeParameter(field, fieldObject)));
+        }
+    }
+
+    private static String buildLikeParameter(Field field, Object fieldObject) {
         Like like = field.getAnnotation(Like.class);
         String location = like.location();
         if (Like.AROUND.equals(location)) {
-            predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject + PERCENT));
-        }
-        if (Like.LEFT.equals(location)) {
-            predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject));
-        }
-        if (Like.RIGHT.equals(location)) {
-            predicates.add(cb.like(root.get(fieldName), fieldObject + PERCENT));
+            return PERCENT + fieldObject + PERCENT;
+        } else if (Like.LEFT.equals(location)) {
+            return PERCENT + fieldObject;
+        } else {
+            return fieldObject + PERCENT;
         }
     }
 }
