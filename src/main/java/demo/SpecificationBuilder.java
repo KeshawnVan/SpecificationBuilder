@@ -52,7 +52,7 @@ public final class SpecificationBuilder {
                 String fieldName = field.isAnnotationPresent(Name.class) ? field.getAnnotation(Name.class).value() : field.getName();
                 Nullable.of(field.get(condition)).ifPresent(fieldObject -> appendPredicate(root, predicates, field, fieldName, fieldObject, cb));
             } catch (IllegalAccessException e) {
-                LOGGER.error("SpecificationBuilder buildSpecification fieldParse error", e);
+                LOGGER.error("SpecificationBuilder buildSpecification field parse error", e);
             }
         };
     }
