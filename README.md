@@ -1,5 +1,8 @@
 # SpecificationBuilder
 
+## 简介
+简化Spring Data JPA动态查询中构建Specification代码比较繁琐的操作。目前已在两家公司三个商业级项目中使用。
+
 ## 现有问题
 假设有一个domain，里面有如下几个字段:
 * Long id
