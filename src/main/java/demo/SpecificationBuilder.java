@@ -109,7 +109,7 @@ public final class SpecificationBuilder {
 
     private static void smartLikeHandler(Root root, List<Predicate> predicates, String fieldName, Object fieldObject, CriteriaBuilder cb) {
         if (fieldObject.toString().contains(PERCENT)) {
-            predicates.add(cb.like(root.get(fieldName), PERCENT + fieldObject));
+            predicates.add(cb.like(root.get(fieldName), fieldObject.toString()));
         } else {
             predicates.add(cb.equal(root.get(fieldName), fieldObject));
         }

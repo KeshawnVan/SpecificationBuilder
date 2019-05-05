@@ -1,7 +1,7 @@
 # SpecificationBuilder
 
 ## 简介
-简化Spring Data JPA动态查询中构建Specification代码比较繁琐的操作。目前已在两家公司三个商业级项目中使用。
+简化Spring Data JPA动态查询中构建Specification代码比较繁琐的操作。目前已在三家公司五个商业级项目中使用。
 
 ## 现有问题
 假设有一个domain，里面有如下几个字段:
@@ -90,3 +90,7 @@ Specification buildSpecification = SpecificationBuilder.buildSpecification(condi
 * @LessThanEqual标明小于等于，小于使用@LessThan
 * @Page标明分页相关的字段，不参与构建Specification
 * @Ignore标明为可忽略字段
+* @SmartLike查询参数带有%时使用模糊查询，否则使用精确查询
+* @Join指定外键关联
+* @NonNull等价于is not null
+* @IsNull等价于is null
