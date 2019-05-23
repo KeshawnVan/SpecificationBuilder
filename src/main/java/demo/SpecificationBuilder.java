@@ -10,6 +10,7 @@ import sign.*;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +34,7 @@ public final class SpecificationBuilder {
     private SpecificationBuilder() {
     }
 
-    public static Specification buildSpecification(Object condition) {
+    public static <T> Specification<T> buildSpecification(@NotNull Object condition) {
         Class<?> conditionClass = condition.getClass();
         List<Field> declaredFields = ReflectionUtil.getFields(conditionClass);
         return (root, query, cb) -> {
